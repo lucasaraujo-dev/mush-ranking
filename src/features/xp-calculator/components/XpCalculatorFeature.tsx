@@ -13,7 +13,7 @@ import {
 import { getXpTable, MushApiError } from '../../../services/api'
 import { useXpCalculatorForm } from '../../../store/xpCalculatorStore'
 import type { MushGameMode, MushXpTable } from '../../../types/mush'
-import { formatNumber, formatPercent } from '../../../utils'
+import { formatNumber, formatPercent, validateXpCalculatorForm } from '../../../utils'
 
 const modeOptions = [
   { label: 'Bedwars', value: 'bedwars' },
@@ -83,17 +83,15 @@ export function XpCalculatorFeature() {
   const apiMessage = isLoadingTable
     ? 'Carregando tabela de XP do modo selecionado...'
     : tableState.error
+  const validation = validateXpCalculatorForm(formValues, xpTable)
 
   const canCalculate =
     xpTable !== null &&
+    validation.parsedValues !== null &&
     Number.isFinite(currentLevel) &&
     Number.isFinite(currentXp) &&
     Number.isFinite(targetLevel) &&
-    Number.isFinite(averageXpPerMatch) &&
-    formValues.currentLevel !== '' &&
-    formValues.currentXp !== '' &&
-    formValues.targetLevel !== '' &&
-    formValues.averageXpPerMatch !== ''
+    Number.isFinite(averageXpPerMatch)
 
   let nextLevelValue = 'Aguardando dados'
   let targetLevelValue = 'Aguardando dados'
@@ -102,15 +100,28 @@ export function XpCalculatorFeature() {
 
   if (canCalculate && xpTable) {
     try {
+      const parsedValues = validation.parsedValues
+
+      if (!parsedValues) {
+        throw new Error('Invalid form data.')
+      }
+
       const remainingToNextLevel = xpToNextLevel(xpTable, currentLevel, currentXp)
       const remainingToTargetLevel = xpToTargetLevel(
         xpTable,
-        currentLevel,
-        currentXp,
-        targetLevel,
+        parsedValues.currentLevel,
+        parsedValues.currentXp,
+        parsedValues.targetLevel,
       )
-      const estimatedMatches = estimateMatches(remainingToTargetLevel, averageXpPerMatch)
-      const progressPercent = calculateProgressPercent(xpTable, currentLevel, currentXp)
+      const estimatedMatches = estimateMatches(
+        remainingToTargetLevel,
+        parsedValues.averageXpPerMatch,
+      )
+      const progressPercent = calculateProgressPercent(
+        xpTable,
+        parsedValues.currentLevel,
+        parsedValues.currentXp,
+      )
 
       nextLevelValue = `${formatNumber(remainingToNextLevel)} XP`
       targetLevelValue = `${formatNumber(remainingToTargetLevel)} XP`
@@ -135,9 +146,15 @@ export function XpCalculatorFeature() {
       </div>
 
       <form className="calculator-form">
-        <FieldGroup htmlFor="nickname" label="Nick">
+        <FieldGroup
+          htmlFor="nickname"
+          invalid={Boolean(validation.fieldErrors.nickname)}
+          label="Nick"
+          message={validation.fieldErrors.nickname}
+        >
           <TextField
             id="nickname"
+            invalid={Boolean(validation.fieldErrors.nickname)}
             name="nickname"
             onChange={(value) => updateField('nickname', value)}
             placeholder="Ex.: Satturnni"
@@ -155,9 +172,15 @@ export function XpCalculatorFeature() {
           />
         </FieldGroup>
 
-        <FieldGroup htmlFor="currentLevel" label="Level atual">
+        <FieldGroup
+          htmlFor="currentLevel"
+          invalid={Boolean(validation.fieldErrors.currentLevel)}
+          label="Level atual"
+          message={validation.fieldErrors.currentLevel}
+        >
           <NumberField
             id="currentLevel"
+            invalid={Boolean(validation.fieldErrors.currentLevel)}
             min={0}
             name="currentLevel"
             onChange={(value) => updateField('currentLevel', value)}
@@ -166,9 +189,15 @@ export function XpCalculatorFeature() {
           />
         </FieldGroup>
 
-        <FieldGroup htmlFor="currentXp" label="XP atual no level">
+        <FieldGroup
+          htmlFor="currentXp"
+          invalid={Boolean(validation.fieldErrors.currentXp)}
+          label="XP atual no level"
+          message={validation.fieldErrors.currentXp}
+        >
           <NumberField
             id="currentXp"
+            invalid={Boolean(validation.fieldErrors.currentXp)}
             min={0}
             name="currentXp"
             onChange={(value) => updateField('currentXp', value)}
@@ -177,9 +206,15 @@ export function XpCalculatorFeature() {
           />
         </FieldGroup>
 
-        <FieldGroup htmlFor="targetLevel" label="Level alvo">
+        <FieldGroup
+          htmlFor="targetLevel"
+          invalid={Boolean(validation.fieldErrors.targetLevel)}
+          label="Level alvo"
+          message={validation.fieldErrors.targetLevel}
+        >
           <NumberField
             id="targetLevel"
+            invalid={Boolean(validation.fieldErrors.targetLevel)}
             min={0}
             name="targetLevel"
             onChange={(value) => updateField('targetLevel', value)}
@@ -188,9 +223,15 @@ export function XpCalculatorFeature() {
           />
         </FieldGroup>
 
-        <FieldGroup htmlFor="averageXpPerMatch" label="XP media por partida">
+        <FieldGroup
+          htmlFor="averageXpPerMatch"
+          invalid={Boolean(validation.fieldErrors.averageXpPerMatch)}
+          label="XP media por partida"
+          message={validation.fieldErrors.averageXpPerMatch}
+        >
           <NumberField
             id="averageXpPerMatch"
+            invalid={Boolean(validation.fieldErrors.averageXpPerMatch)}
             min={1}
             name="averageXpPerMatch"
             onChange={(value) => updateField('averageXpPerMatch', value)}
@@ -203,9 +244,7 @@ export function XpCalculatorFeature() {
       <section className="results-panel" aria-label="Resultados da simulacao">
         <div className="panel-heading">
           <h2>Resultados</h2>
-          <p>
-            {apiMessage || 'Os valores sao recalculados automaticamente conforme voce altera os campos.'}
-          </p>
+          <p>{apiMessage || validation.summary || 'Os valores sao recalculados automaticamente conforme voce altera os campos.'}</p>
         </div>
 
         <div className="results-grid">

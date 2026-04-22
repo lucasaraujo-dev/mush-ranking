@@ -1,5 +1,6 @@
 interface NumberFieldProps {
   id: string
+  invalid?: boolean
   min?: number
   name: string
   onChange: (value: string) => void
@@ -10,6 +11,7 @@ interface NumberFieldProps {
 
 export function NumberField({
   id,
+  invalid = false,
   min,
   name,
   onChange,
@@ -19,6 +21,7 @@ export function NumberField({
 }: NumberFieldProps) {
   return (
     <input
+      aria-invalid={invalid}
       className="field-input"
       id={id}
       inputMode="decimal"

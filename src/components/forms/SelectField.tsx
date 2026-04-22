@@ -5,15 +5,24 @@ interface SelectFieldOption {
 
 interface SelectFieldProps {
   id: string
+  invalid?: boolean
   name: string
   onChange: (value: string) => void
   options: SelectFieldOption[]
   value: string
 }
 
-export function SelectField({ id, name, onChange, options, value }: SelectFieldProps) {
+export function SelectField({
+  id,
+  invalid = false,
+  name,
+  onChange,
+  options,
+  value,
+}: SelectFieldProps) {
   return (
     <select
+      aria-invalid={invalid}
       className="field-input"
       id={id}
       name={name}
