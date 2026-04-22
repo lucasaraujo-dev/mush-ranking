@@ -1,3 +1,4 @@
+import { getOrCreateCachedValue } from '../../cache/index.ts'
 import type {
   MushApiErrorPayload,
   MushGameMode,
@@ -7,6 +8,9 @@ import type {
   MushXpTableResponse,
 } from '../../types/mush'
 import { MUSH_API_BASE_URL } from './index'
+
+const PLAYER_CACHE_TTL_MS = 5 * 60 * 1000
+const XP_TABLE_CACHE_TTL_MS = 60 * 60 * 1000
 
 export class MushApiError extends Error {
   public readonly details?: Record<string, unknown>
@@ -74,15 +78,23 @@ export async function getPlayer(nameOrUuid: string): Promise<MushPlayerProfile> 
     throw new MushApiError('Informe um nick ou UUID valido.', 400)
   }
 
-  const response = await requestJson<MushPlayerProfileResponse>(
-    `/player/${encodeURIComponent(normalizedIdentifier)}`,
-  )
+  const cacheKey = `player:${normalizedIdentifier.toLowerCase()}`
 
-  return response.response
+  return getOrCreateCachedValue(cacheKey, PLAYER_CACHE_TTL_MS, async () => {
+    const response = await requestJson<MushPlayerProfileResponse>(
+      `/player/${encodeURIComponent(normalizedIdentifier)}`,
+    )
+
+    return response.response
+  })
 }
 
 export async function getXpTable(mode: MushGameMode): Promise<MushXpTable> {
-  const response = await requestJson<MushXpTableResponse>(`/games/${mode}/xptable`)
+  const cacheKey = `xptable:${mode}`
 
-  return normalizeXpTable(mode, response)
+  return getOrCreateCachedValue(cacheKey, XP_TABLE_CACHE_TTL_MS, async () => {
+    const response = await requestJson<MushXpTableResponse>(`/games/${mode}/xptable`)
+
+    return normalizeXpTable(mode, response)
+  })
 }
