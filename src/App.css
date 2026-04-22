@@ -38,6 +38,17 @@
   font-size: 1rem;
 }
 
+.feature-placeholder {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.feature-placeholder h2 {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+}
+
 @media (max-width: 640px) {
   .app-shell {
     padding: 20px;
