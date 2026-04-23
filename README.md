@@ -1,73 +1,154 @@
-# React + TypeScript + Vite
+# Mush Ranking
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+![Mush Ranking](./src-tauri/icons/icon.png)
 
-Currently, two official plugins are available:
+![Tauri](https://img.shields.io/badge/Tauri-Desktop-orange?style=for-the-badge&logo=tauri)
+![React](https://img.shields.io/badge/React-19-111827?style=for-the-badge&logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-6-1d4ed8?style=for-the-badge&logo=typescript)
+![Status](https://img.shields.io/badge/status-em%20desenvolvimento-10b981?style=for-the-badge)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Desktop app para acompanhar progressao, estimar vitorias e montar desafios de XP no Mush com autofill a partir da API publica.
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Visao geral
 
-## Expanding the ESLint configuration
+O Mush Ranking nasceu como uma calculadora de XP em desktop com foco em rapidez visual e leitura clara. O app consulta a API publica do Mush, identifica automaticamente o player pelo nick e preenche os dados principais para simular subida de level em modos como `Bedwars`, `Skywars` e `Duels`.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Hoje o projeto prioriza:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- autofill de perfil com dados vindos da API
+- calculo de XP restante e vitorias estimadas
+- desafio automatico para subida de level
+- visual desktop moderno em `React + Tauri`
+- build nativo para Windows com instalador `.exe`
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Preview
+
+### App
+
+![Icone do app](./src-tauri/icons/128x128.png)
+
+### Instalador
+
+![Header do instalador](./src-tauri/installer-assets/nsis-header.bmp)
+![Sidebar do instalador](./src-tauri/installer-assets/nsis-sidebar.bmp)
+
+---
+
+## Recursos
+
+- Busca automatica por nick
+- Autofill de `level atual`, `XP atual` e `XP por vitoria`
+- Suporte para `Double XP`
+- Calculo de `XP ate o proximo level`
+- Calculo de `XP restante ate o alvo`
+- Estimativa de vitorias para subir
+- Bloco de desafio com metas por dificuldade e periodo
+- Hover do perfil com skin completa e stats do modo atual
+- Instalador NSIS customizado com identidade visual propria
+
+---
+
+## Stack
+
+- `React 19`
+- `TypeScript`
+- `Vite`
+- `Tauri v2`
+- `NSIS` para o instalador Windows
+
+---
+
+## Como rodar
+
+### Desenvolvimento web
+
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Desenvolvimento desktop
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run tauri dev
 ```
+
+### Build web
+
+```bash
+npm run build
+```
+
+### Build do executavel
+
+```bash
+npm run tauri build
+```
+
+O instalador gerado fica em:
+
+```text
+src-tauri/target/release/bundle/nsis/Mush Ranking_0.1.0_x64-setup.exe
+```
+
+---
+
+## Estrutura
+
+```text
+src/
+  components/
+  features/
+    xp-calculator/
+  services/
+  store/
+  utils/
+
+src-tauri/
+  icons/
+  installer-assets/
+  tauri.conf.json
+```
+
+---
+
+## API
+
+O app usa a API publica do Mush:
+
+- `GET /player/{nameOrUuid}`
+- `GET /player/profileid/{profile_id}`
+- `GET /games/{mode}/xptable`
+
+Referencia:
+
+- [API publica do Mush](https://mush.com.br/api)
+- [Documentacao da API](https://forum.mush.com.br/topic/149525/documenta%C3%A7%C3%A3o-api-mush)
+
+---
+
+## Observacoes
+
+- Alguns stats podem ter atraso dependendo da sincronizacao da API publica.
+- Modos de `Duels` usam regras especificas de XP por vitoria conforme a logica definida no app.
+- O instalador foi personalizado com assets proprios, mas a barra de progresso continua sendo a nativa do NSIS.
+
+---
+
+## Roadmap
+
+- melhorar atualizacao em tempo real dos stats
+- expandir regras oficiais de XP para mais modos e submodos
+- adicionar mais visuais e telas de acompanhamento
+- publicar releases versionadas
+
+---
+
+## Licenca
+
+Projeto sem licenca definida no momento.
