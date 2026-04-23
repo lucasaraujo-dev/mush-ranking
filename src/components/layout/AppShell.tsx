@@ -25,7 +25,7 @@ export function AppShell({
     <main className="app-shell">
       <section className="hero-panel">
         <header className="app-header">
-          <div>
+          <div className="app-header-copy">
             <span className="eyebrow">Mush Ranking Desktop</span>
             <h1>{title}</h1>
             <p>{subtitle}</p>
