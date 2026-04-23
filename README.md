@@ -68,7 +68,7 @@ Hoje o projeto prioriza:
 
 > Atualize o link abaixo quando publicar o instalador no GitHub Releases.
 
-[![Download para Windows](https://img.shields.io/badge/Download%20para%20Windows-.exe-111827?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/SEU-USUARIO/SEU-REPO/releases/latest)
+[![Download para Windows]([https://img.shields.io/badge/Download%20para%20Windows-.exe-111827?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/SEU-USUARIO/SEU-REPO/releases/latest](https://github.com/lucasaraujo-dev/mush-ranking/releases/tag/v0.1.0))
 
 Instalador atual gerado pelo projeto:
 
