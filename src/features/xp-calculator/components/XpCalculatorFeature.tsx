@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { PlayerIdentityCard } from '../../../components/feedback/PlayerIdentityCard'
 import { ResultCard } from '../../../components/feedback/ResultCard'
+import { XpProgressChart } from '../../../components/feedback/XpProgressChart'
 import { FieldGroup } from '../../../components/forms/FieldGroup'
 import { NumberField } from '../../../components/forms/NumberField'
 import { SelectField } from '../../../components/forms/SelectField'
@@ -8,6 +9,7 @@ import { TextField } from '../../../components/forms/TextField'
 import {
   calculateProgressPercent,
   estimateMatches,
+  xpRequiredForLevel,
   xpToNextLevel,
   xpToTargetLevel,
 } from '../../../calculations'
@@ -201,6 +203,11 @@ export function XpCalculatorFeature() {
   let targetLevelValue = 'Aguardando dados'
   let estimatedMatchesValue = 'Aguardando dados'
   let progressPercentValue = 'Aguardando dados'
+  let chartBars = [
+    { color: '#f59e0b', label: 'XP atual', value: 0 },
+    { color: '#38bdf8', label: 'Ate o proximo', value: 0 },
+    { color: '#34d399', label: 'Ate o alvo', value: 0 },
+  ]
 
   if (canCalculate && xpTable) {
     try {
@@ -221,6 +228,10 @@ export function XpCalculatorFeature() {
         remainingToTargetLevel,
         parsedValues.averageXpPerMatch,
       )
+      const requiredXpForCurrentLevel = xpRequiredForLevel(
+        xpTable,
+        parsedValues.currentLevel,
+      )
       const progressPercent = calculateProgressPercent(
         xpTable,
         parsedValues.currentLevel,
@@ -231,6 +242,23 @@ export function XpCalculatorFeature() {
       targetLevelValue = `${formatNumber(remainingToTargetLevel)} XP`
       estimatedMatchesValue = `${formatNumber(estimatedMatches)} partidas`
       progressPercentValue = `${formatPercent(progressPercent)}%`
+      chartBars = [
+        {
+          color: '#f59e0b',
+          label: 'XP atual',
+          value: parsedValues.currentXp,
+        },
+        {
+          color: '#38bdf8',
+          label: 'Ate o proximo',
+          value: Math.max(requiredXpForCurrentLevel - parsedValues.currentXp, 0),
+        },
+        {
+          color: '#34d399',
+          label: 'Ate o alvo',
+          value: remainingToTargetLevel,
+        },
+      ]
     } catch {
       nextLevelValue = 'Valores fora da faixa'
       targetLevelValue = 'Valores fora da faixa'
@@ -415,6 +443,8 @@ export function XpCalculatorFeature() {
                 : 'Os valores sao recalculados automaticamente conforme voce altera os campos.')}
           </p>
         </div>
+
+        <XpProgressChart bars={chartBars} heading="Grafico rapido de progressao" />
 
         <div className="results-grid">
           <ResultCard

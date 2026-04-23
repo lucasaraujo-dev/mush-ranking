@@ -23,12 +23,12 @@ function getLevelCapXp(table: MushXpTable, level: number) {
   return table.levels[level + 1] ?? 0
 }
 
-function getRequiredXpForLevel(table: MushXpTable, level: number) {
+export function xpRequiredForLevel(table: MushXpTable, level: number) {
   return getLevelCapXp(table, level) - getLevelFloorXp(table, level)
 }
 
 function assertValidCurrentXp(table: MushXpTable, currentLevel: number, currentXp: number) {
-  const requiredXpForLevel = getRequiredXpForLevel(table, currentLevel)
+  const requiredXpForLevel = xpRequiredForLevel(table, currentLevel)
 
   if (!Number.isFinite(currentXp) || currentXp < 0 || currentXp > requiredXpForLevel) {
     throw new RangeError(
@@ -45,7 +45,7 @@ export function xpToNextLevel(
   assertValidLevel(table, currentLevel)
   assertValidCurrentXp(table, currentLevel, currentXp)
 
-  return Math.max(getRequiredXpForLevel(table, currentLevel) - currentXp, 0)
+  return Math.max(xpRequiredForLevel(table, currentLevel) - currentXp, 0)
 }
 
 export function xpToTargetLevel(
@@ -96,7 +96,7 @@ export function calculateProgressPercent(
   assertValidLevel(table, currentLevel)
   assertValidCurrentXp(table, currentLevel, currentXp)
 
-  const requiredXpForLevel = getRequiredXpForLevel(table, currentLevel)
+  const requiredXpForLevel = xpRequiredForLevel(table, currentLevel)
 
   if (requiredXpForLevel === 0) {
     return 100
