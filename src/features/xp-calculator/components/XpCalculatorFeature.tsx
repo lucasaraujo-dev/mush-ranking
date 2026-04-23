@@ -11,6 +11,7 @@ import {
   xpToNextLevel,
   xpToTargetLevel,
 } from '../../../calculations'
+import { duelsSubmodeOptions } from '../constants'
 import { getPlayer, getXpTable, MushApiError } from '../../../services/api'
 import { useXpCalculatorForm } from '../../../store/xpCalculatorStore'
 import type { MushGameMode, MushPlayerProfile, MushXpTable } from '../../../types/mush'
@@ -113,7 +114,7 @@ export function XpCalculatorFeature() {
   const activePlayerError =
     canLookupPlayer && playerLookup.nickname === normalizedNickname ? playerLookup.error : ''
   const autofillSnapshot = activePlayer
-    ? getAutofillXpSnapshot(activePlayer, formValues.mode)
+    ? getAutofillXpSnapshot(activePlayer, formValues.mode, formValues.duelsSubmode)
     : null
   const activeAutofillSourceLabel = autofillSnapshot ? autofillSnapshot.sourceLabel : ''
 
@@ -164,7 +165,7 @@ export function XpCalculatorFeature() {
       return
     }
 
-    const nextSignature = `${activePlayer.account.profile_id}:${formValues.mode}:${autofillSnapshot.currentLevel}:${autofillSnapshot.currentXp}`
+    const nextSignature = `${activePlayer.account.profile_id}:${formValues.mode}:${formValues.duelsSubmode}:${autofillSnapshot.currentLevel}:${autofillSnapshot.currentXp}`
 
     if (autofillSignatureRef.current === nextSignature) {
       return
@@ -182,6 +183,7 @@ export function XpCalculatorFeature() {
   }, [
     activePlayer,
     autofillSnapshot,
+    formValues.duelsSubmode,
     formValues.mode,
     formValues.targetLevel,
     patchFormValues,
@@ -273,6 +275,20 @@ export function XpCalculatorFeature() {
             value={formValues.mode}
           />
         </FieldGroup>
+
+        {formValues.mode === 'duels' ? (
+          <FieldGroup htmlFor="duelsSubmode" label="Submodo de Duels">
+            <SelectField
+              id="duelsSubmode"
+              name="duelsSubmode"
+              onChange={(value) =>
+                updateField('duelsSubmode', value as typeof formValues.duelsSubmode)
+              }
+              options={duelsSubmodeOptions}
+              value={formValues.duelsSubmode}
+            />
+          </FieldGroup>
+        ) : null}
 
         {normalizedNickname ? (
           <div className="player-card-slot">

@@ -1,4 +1,4 @@
-import type { MushGameMode, MushPlayerProfile } from '../types/mush'
+import type { MushDuelsSubmode, MushGameMode, MushPlayerProfile } from '../types/mush'
 import type { AutofillXpSnapshot } from '../types/xp'
 
 function asNumber(value: unknown) {
@@ -47,73 +47,34 @@ function humanizeDuelsModeLabel(modePrefix: string) {
     .join(' ')
 }
 
-function getDuelsAutofillSnapshot(player: MushPlayerProfile): AutofillXpSnapshot | null {
+function getDuelsAutofillSnapshot(
+  player: MushPlayerProfile,
+  duelsSubmode: MushDuelsSubmode,
+): AutofillXpSnapshot | null {
   const duelsStats = getModeStats(player, 'duels')
 
   if (!duelsStats) {
     return null
   }
 
-  const duelCandidates = new Map<
-    string,
-    {
-      currentLevel: number
-      currentXp: number
-    }
-  >()
+  const currentLevel = asNumber(duelsStats[`${duelsSubmode}_level`])
+  const currentXp = asNumber(duelsStats[`${duelsSubmode}_xp`])
 
-  for (const [statKey, rawValue] of Object.entries(duelsStats)) {
-    if (statKey.endsWith('_level')) {
-      const prefix = statKey.slice(0, -'_level'.length)
-      const currentLevel = asNumber(rawValue)
-
-      if (currentLevel !== null) {
-        const currentValue = duelCandidates.get(prefix)
-        duelCandidates.set(prefix, {
-          currentLevel,
-          currentXp: currentValue?.currentXp ?? 0,
-        })
-      }
-    }
-
-    if (statKey.endsWith('_xp')) {
-      const prefix = statKey.slice(0, -'_xp'.length)
-      const currentXp = asNumber(rawValue)
-
-      if (currentXp !== null) {
-        const currentValue = duelCandidates.get(prefix)
-        duelCandidates.set(prefix, {
-          currentLevel: currentValue?.currentLevel ?? 0,
-          currentXp,
-        })
-      }
-    }
-  }
-
-  const bestCandidate = [...duelCandidates.entries()]
-    .filter(([, value]) => value.currentLevel > 0 || value.currentXp > 0)
-    .sort((left, right) => {
-      if (right[1].currentLevel !== left[1].currentLevel) {
-        return right[1].currentLevel - left[1].currentLevel
-      }
-
-      return right[1].currentXp - left[1].currentXp
-    })[0]
-
-  if (!bestCandidate) {
+  if (currentLevel === null || currentXp === null) {
     return null
   }
 
   return {
-    currentLevel: bestCandidate[1].currentLevel,
-    currentXp: bestCandidate[1].currentXp,
-    sourceLabel: `Duels - ${humanizeDuelsModeLabel(bestCandidate[0])}`,
+    currentLevel,
+    currentXp,
+    sourceLabel: `Duels - ${humanizeDuelsModeLabel(duelsSubmode)}`,
   }
 }
 
 export function getAutofillXpSnapshot(
   player: MushPlayerProfile,
   mode: MushGameMode,
+  duelsSubmode: MushDuelsSubmode,
 ): AutofillXpSnapshot | null {
   if (mode === 'bedwars') {
     return getDirectAutofillSnapshot(player, 'bedwars', 'Bedwars')
@@ -123,5 +84,5 @@ export function getAutofillXpSnapshot(
     return getDirectAutofillSnapshot(player, 'skywars_r1', 'Skywars')
   }
 
-  return getDuelsAutofillSnapshot(player)
+  return getDuelsAutofillSnapshot(player, duelsSubmode)
 }

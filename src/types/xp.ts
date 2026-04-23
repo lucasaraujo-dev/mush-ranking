@@ -1,4 +1,4 @@
-import type { MushGameMode } from './mush'
+import type { MushDuelsSubmode, MushGameMode } from './mush'
 
 export interface XpSimulationInput {
   mode: MushGameMode
@@ -12,6 +12,7 @@ export interface XpCalculatorFormValues {
   averageXpPerMatch: string
   currentLevel: string
   currentXp: string
+  duelsSubmode: MushDuelsSubmode
   mode: MushGameMode
   nickname: string
   targetLevel: string

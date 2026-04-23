@@ -1,4 +1,12 @@
 export type MushGameMode = 'bedwars' | 'skywars' | 'duels'
+export type MushDuelsSubmode =
+  | 'bed_fight'
+  | 'boxing'
+  | 'fireball_fight'
+  | 'gladiator'
+  | 'soup'
+  | 'sumo'
+  | 'uhc'
 
 export interface MushApiErrorPayload {
   success: false

@@ -5,6 +5,7 @@ const initialFormValues: XpCalculatorFormValues = {
   averageXpPerMatch: '450',
   currentLevel: '1',
   currentXp: '0',
+  duelsSubmode: 'soup',
   mode: 'bedwars',
   nickname: '',
   targetLevel: '2',
