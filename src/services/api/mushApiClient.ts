@@ -7,7 +7,7 @@ import type {
   MushXpTable,
   MushXpTableResponse,
 } from '../../types/mush'
-import { MUSH_API_BASE_URL } from './index'
+import { MUSH_API_BASE_URL } from './constants.ts'
 
 const PLAYER_CACHE_TTL_MS = 5 * 60 * 1000
 const XP_TABLE_CACHE_TTL_MS = 60 * 60 * 1000
@@ -71,6 +71,17 @@ function normalizeXpTable(mode: MushGameMode, response: MushXpTableResponse): Mu
   }
 }
 
+async function getCachedPlayer(
+  cacheKey: string,
+  path: string,
+): Promise<MushPlayerProfile> {
+  return getOrCreateCachedValue(cacheKey, PLAYER_CACHE_TTL_MS, async () => {
+    const response = await requestJson<MushPlayerProfileResponse>(path)
+
+    return response.response
+  })
+}
+
 export async function getPlayer(nameOrUuid: string): Promise<MushPlayerProfile> {
   const normalizedIdentifier = nameOrUuid.trim()
 
@@ -80,13 +91,15 @@ export async function getPlayer(nameOrUuid: string): Promise<MushPlayerProfile> 
 
   const cacheKey = `player:${normalizedIdentifier.toLowerCase()}`
 
-  return getOrCreateCachedValue(cacheKey, PLAYER_CACHE_TTL_MS, async () => {
-    const response = await requestJson<MushPlayerProfileResponse>(
-      `/player/${encodeURIComponent(normalizedIdentifier)}`,
-    )
+  return getCachedPlayer(cacheKey, `/player/${encodeURIComponent(normalizedIdentifier)}`)
+}
 
-    return response.response
-  })
+export async function getPlayerByProfileId(profileId: number): Promise<MushPlayerProfile> {
+  if (!Number.isInteger(profileId) || profileId <= 0) {
+    throw new MushApiError('Informe um profile_id valido.', 400)
+  }
+
+  return getCachedPlayer(`profile:${profileId}`, `/player/profileid/${profileId}`)
 }
 
 export async function getXpTable(mode: MushGameMode): Promise<MushXpTable> {

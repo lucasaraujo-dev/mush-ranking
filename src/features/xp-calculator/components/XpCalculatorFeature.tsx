@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { PlayerIdentityCard } from '../../../components/feedback/PlayerIdentityCard'
 import { ResultCard } from '../../../components/feedback/ResultCard'
 import { FieldGroup } from '../../../components/forms/FieldGroup'
 import { NumberField } from '../../../components/forms/NumberField'
@@ -10,10 +11,15 @@ import {
   xpToNextLevel,
   xpToTargetLevel,
 } from '../../../calculations'
-import { getXpTable, MushApiError } from '../../../services/api'
+import { getPlayer, getXpTable, MushApiError } from '../../../services/api'
 import { useXpCalculatorForm } from '../../../store/xpCalculatorStore'
-import type { MushGameMode, MushXpTable } from '../../../types/mush'
-import { formatNumber, formatPercent, validateXpCalculatorForm } from '../../../utils'
+import type { MushGameMode, MushPlayerProfile, MushXpTable } from '../../../types/mush'
+import {
+  formatNumber,
+  formatPercent,
+  getPlayerHeadUrl,
+  validateXpCalculatorForm,
+} from '../../../utils'
 
 const modeOptions = [
   { label: 'Bedwars', value: 'bedwars' },
@@ -23,6 +29,15 @@ const modeOptions = [
 
 export function XpCalculatorFeature() {
   const { formValues, updateField } = useXpCalculatorForm()
+  const [playerLookup, setPlayerLookup] = useState<{
+    error: string
+    nickname: string
+    player: MushPlayerProfile | null
+  }>({
+    error: '',
+    nickname: '',
+    player: null,
+  })
   const [tableState, setTableState] = useState<{
     error: string
     mode: MushGameMode | null
@@ -84,6 +99,58 @@ export function XpCalculatorFeature() {
     ? 'Carregando tabela de XP do modo selecionado...'
     : tableState.error
   const validation = validateXpCalculatorForm(formValues, xpTable)
+  const normalizedNickname = formValues.nickname.trim()
+  const canLookupPlayer =
+    normalizedNickname.length >= 3 && !validation.fieldErrors.nickname
+  const isResolvingPlayer =
+    canLookupPlayer && playerLookup.nickname !== normalizedNickname
+  const activePlayer =
+    canLookupPlayer && playerLookup.nickname === normalizedNickname
+      ? playerLookup.player
+      : null
+  const activePlayerError =
+    canLookupPlayer && playerLookup.nickname === normalizedNickname ? playerLookup.error : ''
+
+  useEffect(() => {
+    if (!canLookupPlayer) {
+      return
+    }
+
+    let isMounted = true
+    const timeoutId = window.setTimeout(() => {
+      void getPlayer(normalizedNickname)
+        .then((player) => {
+          if (!isMounted) {
+            return
+          }
+
+          setPlayerLookup({
+            error: '',
+            nickname: normalizedNickname,
+            player,
+          })
+        })
+        .catch((error: unknown) => {
+          if (!isMounted) {
+            return
+          }
+
+          setPlayerLookup({
+            error:
+              error instanceof MushApiError
+                ? error.message
+                : 'Nao foi possivel identificar esse player agora.',
+            nickname: normalizedNickname,
+            player: null,
+          })
+        })
+    }, 350)
+
+    return () => {
+      isMounted = false
+      window.clearTimeout(timeoutId)
+    }
+  }, [canLookupPlayer, normalizedNickname])
 
   const canCalculate =
     xpTable !== null &&
@@ -171,6 +238,45 @@ export function XpCalculatorFeature() {
             value={formValues.mode}
           />
         </FieldGroup>
+
+        {normalizedNickname ? (
+          <div className="player-card-slot">
+            {isResolvingPlayer ? (
+              <PlayerIdentityCard
+                message="Consultando a API publica do Mush..."
+                status="loading"
+                subtitle={`Nick digitado: ${normalizedNickname}`}
+                title="Identificando player"
+              />
+            ) : activePlayer ? (
+              <PlayerIdentityCard
+                avatarUrl={getPlayerHeadUrl(activePlayer, 96)}
+                message={activePlayer.connected ? 'Online agora' : 'Perfil encontrado'}
+                status="success"
+                subtitle={
+                  activePlayer.best_tag
+                    ? `${activePlayer.account.username} - ${activePlayer.best_tag.name}`
+                    : activePlayer.account.username
+                }
+                title="Player identificado"
+              />
+            ) : activePlayerError ? (
+              <PlayerIdentityCard
+                message={activePlayerError}
+                status="error"
+                subtitle={`Nick consultado: ${normalizedNickname}`}
+                title="Player nao encontrado"
+              />
+            ) : (
+              <PlayerIdentityCard
+                message="Continue digitando um nick valido para buscar o perfil."
+                status="idle"
+                subtitle="A busca comeca automaticamente"
+                title="Aguardando identificacao"
+              />
+            )}
+          </div>
+        ) : null}
 
         <FieldGroup
           htmlFor="currentLevel"

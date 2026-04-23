@@ -1,3 +1,2 @@
-export const MUSH_API_BASE_URL = 'https://mush.com.br/api'
-
-export { MushApiError, getPlayer, getXpTable } from './mushApiClient'
+export { MUSH_API_BASE_URL } from './constants.ts'
+export { MushApiError, getPlayer, getPlayerByProfileId, getXpTable } from './mushApiClient'
