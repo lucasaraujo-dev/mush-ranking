@@ -7,6 +7,8 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-1d4ed8?style=for-the-badge&logo=typescript)
 ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-10b981?style=for-the-badge)
 
+[![Baixar .exe](https://img.shields.io/badge/Baixar-.exe-F59E0B?style=for-the-badge&logo=windows&logoColor=white)](#download)
+
 Desktop app para acompanhar progressao, estimar vitorias e montar desafios de XP no Mush com autofill a partir da API publica.
 
 ---
@@ -62,38 +64,16 @@ Hoje o projeto prioriza:
 
 ---
 
-## Como rodar
+## Download
 
-### Desenvolvimento web
+> Atualize o link abaixo quando publicar o instalador no GitHub Releases.
 
-```bash
-npm install
-npm run dev
-```
+[![Download para Windows](https://img.shields.io/badge/Download%20para%20Windows-.exe-111827?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/SEU-USUARIO/SEU-REPO/releases/latest)
 
-### Desenvolvimento desktop
-
-```bash
-npm install
-npm run tauri dev
-```
-
-### Build web
-
-```bash
-npm run build
-```
-
-### Build do executavel
-
-```bash
-npm run tauri build
-```
-
-O instalador gerado fica em:
+Instalador atual gerado pelo projeto:
 
 ```text
-src-tauri/target/release/bundle/nsis/Mush Ranking_0.1.0_x64-setup.exe
+Mush Ranking_0.1.0_x64-setup.exe
 ```
 
 ---
