@@ -23,8 +23,16 @@ export function useXpCalculatorForm() {
     }))
   }
 
+  function patchFormValues(values: Partial<XpCalculatorFormValues>) {
+    setFormValues((currentValues) => ({
+      ...currentValues,
+      ...values,
+    }))
+  }
+
   return {
     formValues,
+    patchFormValues,
     updateField,
   }
 }

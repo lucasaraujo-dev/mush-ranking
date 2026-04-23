@@ -16,3 +16,9 @@ export interface XpCalculatorFormValues {
   nickname: string
   targetLevel: string
 }
+
+export interface AutofillXpSnapshot {
+  currentLevel: number
+  currentXp: number
+  sourceLabel: string
+}

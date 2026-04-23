@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { PlayerIdentityCard } from '../../../components/feedback/PlayerIdentityCard'
 import { ResultCard } from '../../../components/feedback/ResultCard'
 import { FieldGroup } from '../../../components/forms/FieldGroup'
@@ -17,6 +17,7 @@ import type { MushGameMode, MushPlayerProfile, MushXpTable } from '../../../type
 import {
   formatNumber,
   formatPercent,
+  getAutofillXpSnapshot,
   getPlayerHeadUrl,
   validateXpCalculatorForm,
 } from '../../../utils'
@@ -28,7 +29,8 @@ const modeOptions = [
 ]
 
 export function XpCalculatorFeature() {
-  const { formValues, updateField } = useXpCalculatorForm()
+  const { formValues, patchFormValues, updateField } = useXpCalculatorForm()
+  const autofillSignatureRef = useRef('')
   const [playerLookup, setPlayerLookup] = useState<{
     error: string
     nickname: string
@@ -110,6 +112,10 @@ export function XpCalculatorFeature() {
       : null
   const activePlayerError =
     canLookupPlayer && playerLookup.nickname === normalizedNickname ? playerLookup.error : ''
+  const autofillSnapshot = activePlayer
+    ? getAutofillXpSnapshot(activePlayer, formValues.mode)
+    : null
+  const activeAutofillSourceLabel = autofillSnapshot ? autofillSnapshot.sourceLabel : ''
 
   useEffect(() => {
     if (!canLookupPlayer) {
@@ -151,6 +157,35 @@ export function XpCalculatorFeature() {
       window.clearTimeout(timeoutId)
     }
   }, [canLookupPlayer, normalizedNickname])
+
+  useEffect(() => {
+    if (!activePlayer || !autofillSnapshot) {
+      autofillSignatureRef.current = ''
+      return
+    }
+
+    const nextSignature = `${activePlayer.account.profile_id}:${formValues.mode}:${autofillSnapshot.currentLevel}:${autofillSnapshot.currentXp}`
+
+    if (autofillSignatureRef.current === nextSignature) {
+      return
+    }
+
+    autofillSignatureRef.current = nextSignature
+    patchFormValues({
+      currentLevel: String(autofillSnapshot.currentLevel),
+      currentXp: String(autofillSnapshot.currentXp),
+      targetLevel:
+        Number(formValues.targetLevel) <= autofillSnapshot.currentLevel
+          ? String(autofillSnapshot.currentLevel + 1)
+          : formValues.targetLevel,
+    })
+  }, [
+    activePlayer,
+    autofillSnapshot,
+    formValues.mode,
+    formValues.targetLevel,
+    patchFormValues,
+  ])
 
   const canCalculate =
     xpTable !== null &&
@@ -251,7 +286,13 @@ export function XpCalculatorFeature() {
             ) : activePlayer ? (
               <PlayerIdentityCard
                 avatarUrl={getPlayerHeadUrl(activePlayer, 96)}
-                message={activePlayer.connected ? 'Online agora' : 'Perfil encontrado'}
+                message={
+                  autofillSnapshot
+                    ? `Level e XP preenchidos automaticamente de ${activeAutofillSourceLabel}.`
+                    : activePlayer.connected
+                      ? 'Online agora'
+                      : 'Perfil encontrado, mas esse modo nao trouxe level e XP.'
+                }
                 status="success"
                 subtitle={
                   activePlayer.best_tag
@@ -350,7 +391,13 @@ export function XpCalculatorFeature() {
       <section className="results-panel" aria-label="Resultados da simulacao">
         <div className="panel-heading">
           <h2>Resultados</h2>
-          <p>{apiMessage || validation.summary || 'Os valores sao recalculados automaticamente conforme voce altera os campos.'}</p>
+          <p>
+            {apiMessage ||
+              validation.summary ||
+              (activeAutofillSourceLabel
+                ? `Campos atuais preenchidos a partir de ${activeAutofillSourceLabel}.`
+                : 'Os valores sao recalculados automaticamente conforme voce altera os campos.')}
+          </p>
         </div>
 
         <div className="results-grid">
