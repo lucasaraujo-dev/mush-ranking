@@ -9,22 +9,27 @@ initializeRouter()
 function App() {
   const route = useCurrentRoute()
 
-  const title =
-    route === 'overview' ? 'Painel base do aplicativo desktop.' : 'Base pronta para a calculadora de XP.'
+  const titleByRoute = {
+    overview: 'Painel base do aplicativo desktop.',
+    'xp-calculator': 'Calculadora de XP com autofill.',
+  } as const
 
-  const subtitle =
-    route === 'overview'
-      ? 'Layout principal e navegacao basica configurados para sustentar as proximas features do MVP.'
-      : 'A arquitetura principal do projeto foi separada em UI, feature, servicos, calculos e tipos para permitir crescimento sem acoplamento.'
+  const subtitleByRoute = {
+    overview:
+      'Layout principal, servicos da API e estrutura modular prontos para sustentar as proximas features do app.',
+    'xp-calculator':
+      'A calculadora usa tabela de XP oficial e pode preencher level e XP automaticamente a partir do nick informado.',
+  } as const
 
   return (
     <AppShell
       activeRoute={route}
       onNavigate={navigateTo}
-      title={title}
-      subtitle={subtitle}
+      title={titleByRoute[route]}
+      subtitle={subtitleByRoute[route]}
     >
-      {route === 'overview' ? <OverviewPanel /> : <XpCalculatorFeature />}
+      {route === 'overview' ? <OverviewPanel /> : null}
+      {route === 'xp-calculator' ? <XpCalculatorFeature /> : null}
     </AppShell>
   )
 }

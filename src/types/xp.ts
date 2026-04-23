@@ -12,6 +12,7 @@ export interface XpCalculatorFormValues {
   averageXpPerMatch: string
   currentLevel: string
   currentXp: string
+  doubleXp: boolean
   duelsSubmode: MushDuelsSubmode
   mode: MushGameMode
   nickname: string

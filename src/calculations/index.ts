@@ -1,5 +1,6 @@
 export {
   calculateProgressPercent,
+  estimateActionsForXp,
   estimateMatches,
   xpRequiredForLevel,
   xpToNextLevel,

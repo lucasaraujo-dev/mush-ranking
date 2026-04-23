@@ -32,6 +32,11 @@ export function setCachedValue<TValue>(key: string, value: TValue, ttlMs: number
   })
 }
 
+export function clearCachedValue(key: string) {
+  cacheStore.delete(key)
+  pendingRequests.delete(key)
+}
+
 export async function getOrCreateCachedValue<TValue>(
   key: string,
   ttlMs: number,

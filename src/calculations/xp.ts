@@ -78,7 +78,7 @@ export function estimateMatches(totalRemainingXp: number, averageXpPerMatch: num
   }
 
   if (!Number.isFinite(averageXpPerMatch) || averageXpPerMatch <= 0) {
-    throw new RangeError('A XP media por partida deve ser maior que zero.')
+    throw new RangeError('A XP por vitoria deve ser maior que zero.')
   }
 
   if (totalRemainingXp === 0) {
@@ -86,6 +86,22 @@ export function estimateMatches(totalRemainingXp: number, averageXpPerMatch: num
   }
 
   return Math.ceil(totalRemainingXp / averageXpPerMatch)
+}
+
+export function estimateActionsForXp(totalRemainingXp: number, xpPerAction: number): number {
+  if (!Number.isFinite(totalRemainingXp) || totalRemainingXp < 0) {
+    throw new RangeError('O XP restante deve ser um numero maior ou igual a zero.')
+  }
+
+  if (!Number.isFinite(xpPerAction) || xpPerAction <= 0) {
+    throw new RangeError('A XP por acao deve ser maior que zero.')
+  }
+
+  if (totalRemainingXp === 0) {
+    return 0
+  }
+
+  return Math.ceil(totalRemainingXp / xpPerAction)
 }
 
 export function calculateProgressPercent(

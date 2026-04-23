@@ -5,7 +5,9 @@ const DEFAULT_ROUTE: AppRoute = 'xp-calculator'
 const ROUTE_PREFIX = '#/'
 
 function normalizeRoute(value: string): AppRoute {
-  return value === 'overview' || value === 'xp-calculator' ? value : DEFAULT_ROUTE
+  return value === 'overview' || value === 'xp-calculator'
+    ? value
+    : DEFAULT_ROUTE
 }
 
 function getRouteFromHash(): AppRoute {

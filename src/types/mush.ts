@@ -1,12 +1,18 @@
 export type MushGameMode = 'bedwars' | 'skywars' | 'duels'
-export type MushDuelsSubmode =
-  | 'bed_fight'
-  | 'boxing'
-  | 'fireball_fight'
+export type MushLeaderboardMode =
+  | 'bedwars'
+  | 'bridge'
+  | 'ctf'
   | 'gladiator'
+  | 'hg'
+  | 'minimush'
+  | 'murder'
+  | 'party'
+  | 'pvp'
+  | 'quickbuilders'
+  | 'skywars'
   | 'soup'
-  | 'sumo'
-  | 'uhc'
+export type MushDuelsSubmode = string
 
 export interface MushApiErrorPayload {
   success: false
@@ -24,13 +30,15 @@ export interface MushPlayerProfileResponse {
   response: MushPlayerProfile
 }
 
+export interface MushAccountIdentity {
+  profile_id: number
+  type: string
+  unique_id: string
+  username: string
+}
+
 export interface MushPlayerProfile {
-  account: {
-    profile_id: number
-    type: string
-    unique_id: string
-    username: string
-  }
+  account: MushAccountIdentity
   best_tag?: {
     color: string
     name: string
@@ -50,4 +58,35 @@ export type MushXpTableResponse = Record<string, number>
 export interface MushXpTable {
   mode: MushGameMode
   levels: number[]
+}
+
+export interface MushLeaderboardRecordResponse {
+  account: MushAccountIdentity
+  avatar_url: string
+  color: string
+  pos: number
+  [key: string]: unknown
+}
+
+export interface MushLeaderboardResponse {
+  records: MushLeaderboardRecordResponse[]
+}
+
+export interface MushLeaderboardMetric {
+  key: string
+  label: string
+}
+
+export interface MushLeaderboardRecord {
+  account: MushAccountIdentity
+  avatarUrl: string
+  color: string
+  position: number
+  stats: Record<string, number | string>
+}
+
+export interface MushLeaderboard {
+  metrics: MushLeaderboardMetric[]
+  mode: MushLeaderboardMode
+  records: MushLeaderboardRecord[]
 }

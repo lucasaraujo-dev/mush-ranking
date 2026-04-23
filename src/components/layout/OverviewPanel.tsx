@@ -3,8 +3,9 @@ export function OverviewPanel() {
     <section className="feature-placeholder" aria-label="Visao geral do app">
       <h2>Visao geral</h2>
       <p>
-        MVP desktop para consultar dados publicos do Mush e simular progressao de XP
-        por modo com foco em Bedwars, Skywars e Duels.
+        App desktop para consultar o Top 100 oficial do Mush por minigame e simular
+        progressao de XP com dados publicos da API. A base agora cobre ranking em
+        tempo real e calculadora para Bedwars, Skywars e Duels.
       </p>
     </section>
   )

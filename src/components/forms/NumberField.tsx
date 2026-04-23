@@ -5,6 +5,7 @@ interface NumberFieldProps {
   name: string
   onChange: (value: string) => void
   placeholder: string
+  readOnly?: boolean
   step?: number
   value: string
 }
@@ -16,6 +17,7 @@ export function NumberField({
   name,
   onChange,
   placeholder,
+  readOnly = false,
   step = 1,
   value,
 }: NumberFieldProps) {
@@ -29,6 +31,7 @@ export function NumberField({
       name={name}
       onChange={(event) => onChange(event.target.value)}
       placeholder={placeholder}
+      readOnly={readOnly}
       step={step}
       type="number"
       value={value}

@@ -1,7 +1,11 @@
-import { getOrCreateCachedValue } from '../../cache/index.ts'
+import { clearCachedValue, getOrCreateCachedValue } from '../../cache/index.ts'
 import type {
   MushApiErrorPayload,
   MushGameMode,
+  MushLeaderboard,
+  MushLeaderboardMode,
+  MushLeaderboardRecordResponse,
+  MushLeaderboardResponse,
   MushPlayerProfile,
   MushPlayerProfileResponse,
   MushXpTable,
@@ -9,8 +13,18 @@ import type {
 } from '../../types/mush'
 import { MUSH_API_BASE_URL } from './constants.ts'
 
-const PLAYER_CACHE_TTL_MS = 5 * 60 * 1000
+const LEADERBOARD_CACHE_TTL_MS = 5 * 60 * 1000
 const XP_TABLE_CACHE_TTL_MS = 60 * 60 * 1000
+const LEADERBOARD_RESERVED_KEYS = new Set(['account', 'avatar_url', 'color', 'pos'])
+const LEADERBOARD_TOKEN_LABELS: Record<string, string> = {
+  ctf: 'CTF',
+  fkdr: 'FKDR',
+  hg: 'HG',
+  kd: 'K/D',
+  pvp: 'PVP',
+  uhc: 'UHC',
+  xp: 'XP',
+}
 
 export class MushApiError extends Error {
   public readonly details?: Record<string, unknown>
@@ -28,8 +42,8 @@ export class MushApiError extends Error {
   }
 }
 
-async function requestJson<T>(path: string): Promise<T> {
-  const response = await fetch(`${MUSH_API_BASE_URL}${path}`)
+async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(`${MUSH_API_BASE_URL}${path}`, init)
 
   const payload = (await response.json()) as T | MushApiErrorPayload
 
@@ -71,15 +85,78 @@ function normalizeXpTable(mode: MushGameMode, response: MushXpTableResponse): Mu
   }
 }
 
-async function getCachedPlayer(
-  cacheKey: string,
-  path: string,
-): Promise<MushPlayerProfile> {
-  return getOrCreateCachedValue(cacheKey, PLAYER_CACHE_TTL_MS, async () => {
-    const response = await requestJson<MushPlayerProfileResponse>(path)
+function formatLeaderboardMetricLabel(key: string) {
+  const rawMetricKey = key.includes(':') ? key.split(':').at(-1) ?? key : key
 
-    return response.response
+  return rawMetricKey
+    .split('_')
+    .filter(Boolean)
+    .map((token) => {
+      const normalizedToken = token.toLowerCase()
+      const aliasedToken = LEADERBOARD_TOKEN_LABELS[normalizedToken]
+
+      if (aliasedToken) {
+        return aliasedToken
+      }
+
+      if (/^\d+$/.test(token)) {
+        return token
+      }
+
+      if (token.length <= 3) {
+        return token.toUpperCase()
+      }
+
+      return token.charAt(0).toUpperCase() + token.slice(1)
+    })
+    .join(' ')
+}
+
+function normalizeLeaderboard(
+  mode: MushLeaderboardMode,
+  response: MushLeaderboardResponse,
+): MushLeaderboard {
+  const metricKeys = response.records.flatMap((record) =>
+    Object.keys(record).filter((key) => !LEADERBOARD_RESERVED_KEYS.has(key)),
+  )
+  const uniqueMetricKeys = Array.from(new Set(metricKeys))
+
+  return {
+    metrics: uniqueMetricKeys.map((key) => ({
+      key,
+      label: formatLeaderboardMetricLabel(key),
+    })),
+    mode,
+    records: response.records.map((record: MushLeaderboardRecordResponse) => {
+      const stats: Record<string, number | string> = {}
+
+      uniqueMetricKeys.forEach((metricKey) => {
+        const value = record[metricKey]
+
+        if (typeof value === 'number' || typeof value === 'string') {
+          stats[metricKey] = value
+        }
+      })
+
+      return {
+        account: record.account,
+        avatarUrl: record.avatar_url,
+        color: record.color,
+        position: record.pos,
+        stats,
+      }
+    }),
+  }
+}
+
+async function getFreshPlayer(path: string): Promise<MushPlayerProfile> {
+  const separator = path.includes('?') ? '&' : '?'
+  const cacheBustedPath = `${path}${separator}_=${Date.now()}`
+  const response = await requestJson<MushPlayerProfileResponse>(cacheBustedPath, {
+    cache: 'no-store',
   })
+
+  return response.response
 }
 
 export async function getPlayer(nameOrUuid: string): Promise<MushPlayerProfile> {
@@ -89,9 +166,17 @@ export async function getPlayer(nameOrUuid: string): Promise<MushPlayerProfile> 
     throw new MushApiError('Informe um nick ou UUID valido.', 400)
   }
 
-  const cacheKey = `player:${normalizedIdentifier.toLowerCase()}`
+  return getFreshPlayer(`/player/${encodeURIComponent(normalizedIdentifier)}`)
+}
 
-  return getCachedPlayer(cacheKey, `/player/${encodeURIComponent(normalizedIdentifier)}`)
+export function invalidatePlayerCache(nameOrUuid: string) {
+  const normalizedIdentifier = nameOrUuid.trim()
+
+  if (!normalizedIdentifier) {
+    return
+  }
+
+  clearCachedValue(`player:${normalizedIdentifier.toLowerCase()}`)
 }
 
 export async function getPlayerByProfileId(profileId: number): Promise<MushPlayerProfile> {
@@ -99,7 +184,7 @@ export async function getPlayerByProfileId(profileId: number): Promise<MushPlaye
     throw new MushApiError('Informe um profile_id valido.', 400)
   }
 
-  return getCachedPlayer(`profile:${profileId}`, `/player/profileid/${profileId}`)
+  return getFreshPlayer(`/player/profileid/${profileId}`)
 }
 
 export async function getXpTable(mode: MushGameMode): Promise<MushXpTable> {
@@ -109,5 +194,15 @@ export async function getXpTable(mode: MushGameMode): Promise<MushXpTable> {
     const response = await requestJson<MushXpTableResponse>(`/games/${mode}/xptable`)
 
     return normalizeXpTable(mode, response)
+  })
+}
+
+export async function getLeaderboard(mode: MushLeaderboardMode): Promise<MushLeaderboard> {
+  const cacheKey = `leaderboard:${mode}`
+
+  return getOrCreateCachedValue(cacheKey, LEADERBOARD_CACHE_TTL_MS, async () => {
+    const response = await requestJson<MushLeaderboardResponse>(`/leaderboard/${mode}`)
+
+    return normalizeLeaderboard(mode, response)
   })
 }

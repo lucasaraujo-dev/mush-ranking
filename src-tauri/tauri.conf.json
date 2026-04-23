@@ -27,6 +27,17 @@
     "active": true,
     "targets": "nsis",
     "windows": {
+      "nsis": {
+        "displayLanguageSelector": false,
+        "headerImage": "installer-assets/nsis-header.bmp",
+        "installMode": "currentUser",
+        "installerIcon": "icons/icon.ico",
+        "languages": [
+          "PortugueseBR",
+          "English"
+        ],
+        "sidebarImage": "installer-assets/nsis-sidebar.bmp"
+      },
       "webviewInstallMode": {
         "type": "embedBootstrapper"
       }

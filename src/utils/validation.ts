@@ -80,7 +80,7 @@ export function validateXpCalculatorForm(
   }
 
   if (averageXpPerMatch === null || averageXpPerMatch <= 0) {
-    fieldErrors.averageXpPerMatch = 'Informe uma XP media por partida maior que zero.'
+    fieldErrors.averageXpPerMatch = 'Informe uma XP por vitoria maior que zero.'
   }
 
   if (currentLevel !== null && targetLevel !== null && targetLevel < currentLevel) {

@@ -1,1 +1,1 @@
-export { getCachedValue, getOrCreateCachedValue, setCachedValue } from './memoryCache.ts'
+export { clearCachedValue, getCachedValue, getOrCreateCachedValue, setCachedValue } from './memoryCache.ts'

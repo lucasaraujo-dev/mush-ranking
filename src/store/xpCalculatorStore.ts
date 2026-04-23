@@ -2,9 +2,10 @@ import { useState } from 'react'
 import type { XpCalculatorFormValues } from '../types/xp'
 
 const initialFormValues: XpCalculatorFormValues = {
-  averageXpPerMatch: '450',
+  averageXpPerMatch: '250',
   currentLevel: '1',
   currentXp: '0',
+  doubleXp: false,
   duelsSubmode: 'soup',
   mode: 'bedwars',
   nickname: '',
