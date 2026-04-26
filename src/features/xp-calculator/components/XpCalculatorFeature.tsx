@@ -1,5 +1,7 @@
 import type { CSSProperties } from 'react'
 import { useEffect, useRef, useState } from 'react'
+import { listen } from '@tauri-apps/api/event'
+import { invoke } from '@tauri-apps/api/core'
 import { PlayerIdentityCard } from '../../../components/feedback/PlayerIdentityCard'
 import { ResultCard } from '../../../components/feedback/ResultCard'
 import { XpProgressChart } from '../../../components/feedback/XpProgressChart'
@@ -294,6 +296,7 @@ export function XpCalculatorFeature() {
   const [playerRefreshTick, setPlayerRefreshTick] = useState(0)
   const [showChallenge, setShowChallenge] = useState(false)
   const [showMainSummary, setShowMainSummary] = useState(false)
+  const lastModeContextRef = useRef('')
   const [challengeDifficulty, setChallengeDifficulty] = useState<'dificil' | 'facil' | 'medio'>(
     'facil',
   )
@@ -448,6 +451,34 @@ export function XpCalculatorFeature() {
     : ''
 
   useEffect(() => {
+    void invoke('ensure_log_watcher').catch(() => {
+      return null
+    })
+
+    let unsubscribe: (() => void) | undefined
+
+    void listen<boolean>('minecraft-refresh-trigger', async () => {
+      if (!canLookupPlayer) {
+        return
+      }
+
+      invalidatePlayerCache(normalizedNickname)
+      setIsRefreshingPlayer(true)
+      setPlayerRefreshTick((currentValue) => currentValue + 1)
+    })
+      .then((unlisten) => {
+        unsubscribe = unlisten
+      })
+      .catch(() => {
+        return null
+      })
+
+    return () => {
+      unsubscribe?.()
+    }
+  }, [canLookupPlayer, normalizedNickname])
+
+  useEffect(() => {
     if (formValues.mode !== 'duels') {
       return
     }
@@ -549,13 +580,39 @@ export function XpCalculatorFeature() {
   }
 
   useEffect(() => {
+    const nextModeContext = `${normalizedNickname}:${formValues.mode}:${formValues.duelsSubmode}`
+
+    if (!normalizedNickname) {
+      lastModeContextRef.current = ''
+      return
+    }
+
+    if (!lastModeContextRef.current) {
+      lastModeContextRef.current = nextModeContext
+      return
+    }
+
+    if (lastModeContextRef.current === nextModeContext) {
+      return
+    }
+
+    lastModeContextRef.current = nextModeContext
+    autofillSignatureRef.current = ''
+
+    patchFormValues({
+      currentLevel: '0',
+      currentXp: '0',
+    })
+  }, [normalizedNickname, formValues.mode, formValues.duelsSubmode, patchFormValues])
+
+  useEffect(() => {
     if (!activePlayer || !normalizedAutofillSnapshot) {
       autofillSignatureRef.current = ''
       lastAutofilledProfileIdRef.current = null
       return
     }
 
-    const nextSignature = `${activePlayer.account.profile_id}:${formValues.mode}:${formValues.duelsSubmode}:${normalizedAutofillSnapshot.currentLevel}:${normalizedAutofillSnapshot.currentXp}:${averageXpSnapshot?.value ?? 'manual'}`
+    const nextSignature = `${activePlayer.account.profile_id}:${formValues.mode}:${formValues.duelsSubmode}:${normalizedAutofillSnapshot.sourceLabel}:${normalizedAutofillSnapshot.currentLevel}:${normalizedAutofillSnapshot.currentXp}:${averageXpSnapshot?.value ?? 'manual'}`
 
     if (autofillSignatureRef.current === nextSignature) {
       return
