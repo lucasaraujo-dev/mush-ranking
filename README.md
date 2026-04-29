@@ -71,7 +71,7 @@ Hoje o projeto prioriza:
 Instalador atual gerado pelo projeto:
 
 ```text
-Mush Ranking_0.1.0_x64-setup.exe
+Mush Ranking_0.1.1_x64-setup.exe
 ```
 
 ---
