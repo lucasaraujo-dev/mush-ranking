@@ -66,7 +66,7 @@ Hoje o projeto prioriza:
 
 ## Download
 
-[![Download para Windows](https://img.shields.io/badge/Download%20para%20Windows-.exe-111827?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/lucasaraujo-dev/mush-ranking/releases/tag/v0.1.0)
+[![Download para Windows](https://img.shields.io/badge/Download%20para%20Windows-.exe-111827?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/lucasaraujo-dev/mush-ranking/releases/tag/v0.1.1)
 
 Instalador atual gerado pelo projeto:
 
